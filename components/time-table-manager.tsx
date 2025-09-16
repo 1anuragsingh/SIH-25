@@ -59,7 +59,8 @@ export default function TimetableManager() {
   const fetchTimetable = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/timetable`, {
+      // FIX: Changed the endpoint to the correct one for fetching a teacher's timetable
+      const response = await fetch(`/api/timetable/teacher`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`

@@ -74,7 +74,6 @@ export default function StudentDashboard() {
 
     setLoadingClasses(true);
     try {
-      // FIX: Changed the API endpoint to the new student-specific route
       const response = await fetch(`/api/timetable/student`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -210,6 +209,11 @@ export default function StudentDashboard() {
               <div className="space-y-3">
                 {upcomingClasses.length > 0 ? (
                   upcomingClasses.map((classItem) => {
+                    // FIX: Add a check to prevent rendering if required data is missing
+                    if (!classItem.subject || !classItem.teacher || !classItem.startTime || !classItem.endTime) {
+                      return null;
+                    }
+
                     const status = getClassStatus(classItem.startTime, classItem.endTime);
                     const formattedTime = formatDateTime(classItem.startTime);
                     
