@@ -70,7 +70,8 @@ export default function TeacherDashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/timetable`, {
+      // FIX: Changed endpoint to /api/timetable/teacher
+      const response = await fetch(`/api/timetable/teacher`, {
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -453,9 +454,3 @@ export default function TeacherDashboard() {
                 })
               )}
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
-  );
-}
