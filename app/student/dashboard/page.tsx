@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { TrendingUp, Clock, QrCode, CheckCircle, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/AuthProvider.jsx"
 import { useRouter } from "next/navigation"
-import Link from "next/link" // Import the Link component
+import Link from "next/link"
 import toast, { Toaster } from "react-hot-toast"
 
 // Mock data (for stats, as requested to keep)
@@ -61,15 +61,20 @@ export default function StudentDashboard() {
   const { user, loading, handleApiError } = useAuth();
   const router = useRouter();
 
-  // New state to store fetched classes and loading status
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
 
   const fetchTimetableData = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!user || !token) {
+      setLoadingClasses(false);
+      return;
+    }
+
     setLoadingClasses(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/timetable`, {
+      // FIX: Changed the API endpoint to the new student-specific route
+      const response = await fetch(`/api/timetable/student`, {
         headers: {
           'Authorization': `Bearer ${token}`
         },
@@ -91,7 +96,7 @@ export default function StudentDashboard() {
     } finally {
       setLoadingClasses(false);
     }
-  }, [handleApiError]);
+  }, [user, handleApiError]);
 
   useEffect(() => {
     if (!loading && (!user || user.role !== 'student')) {
@@ -133,7 +138,6 @@ export default function StudentDashboard() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
       >
-        {/* FIX: Change the Button to a Link that navigates to the scanner page */}
         <Link href="/student/scanner">
             <Button
                 size="lg"
