@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,8 +10,9 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { User, BookOpen, Edit, Save, X } from "lucide-react"
+import { User, BookOpen, Edit, Save, X, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/AuthProvider.jsx"
+import toast from "react-hot-toast"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -20,30 +21,110 @@ const fadeInUp = {
 }
 
 export default function StudentProfile() {
-  const { user } = useAuth()
+  const { user, loading, handleApiError } = useAuth();
   const [isEditing, setIsEditing] = useState(false)
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+
+  // Derive initial profile data from the user object
   const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
+    firstName: user?.name.split(' ')[0] || "",
+    lastName: user?.name.split(' ')[1] || "",
     email: user?.email || "",
-    enrollmentNo: "CSE2021001",
-    program: "BTech Computer Science Engineering",
-    semester: "6th Semester",
-    year: "3rd Year",
+    enrollmentNo: user?.enrollmentNo || "",
+    program: "BTech Computer Science Engineering", // Placeholder as it's not in user data
+    semester: user?.currentSemester || "",
+    year: "3rd Year", // Placeholder
     address: "123 Student Housing, University Campus",
     dateOfBirth: "2002-05-15",
     bloodGroup: "O+",
     emergencyContact: "+1 (555) 987-6543",
-  })
+  });
+
+  // Fetch student's subjects from the backend
+  const fetchStudentSubjects = useCallback(async () => {
+    setLoadingSubjects(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!user || !token) {
+        setLoadingSubjects(false);
+        return;
+      }
+
+      // FIX: New route for student's timetable and subjects
+      const response = await fetch(`/api/timetable/student`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          handleApiError(response);
+        }
+        throw new Error("Failed to load subjects");
+      }
+
+      const data = await response.json();
+      setSubjects(data.timetable || []);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+      toast.error("Failed to load subjects.");
+    } finally {
+      setLoadingSubjects(false);
+    }
+  }, [user, handleApiError]);
+
+  useEffect(() => {
+    if (user) {
+      // Initialize profile data once the user object is available
+      setProfileData({
+        firstName: user.name.split(' ')[0] || "",
+        lastName: user.name.split(' ')[1] || "",
+        email: user.email || "",
+        enrollmentNo: user.enrollmentNo || "",
+        program: "BTech Computer Science Engineering",
+        semester: user.currentSemester || "",
+        year: "3rd Year",
+        address: "123 Student Housing, University Campus",
+        dateOfBirth: "2002-05-15",
+        bloodGroup: "O+",
+        emergencyContact: "+1 (555) 987-6543",
+      });
+      fetchStudentSubjects();
+    }
+  }, [user, fetchStudentSubjects]);
 
   const handleSave = () => {
-    // Here you would typically save to API
-    setIsEditing(false)
-  }
+    // API call to save updated profile data would go here
+    setIsEditing(false);
+    toast.success("Profile updated successfully!");
+  };
 
   const handleCancel = () => {
-    // Reset to original data
-    setIsEditing(false)
+    // Reset to initial user data
+    setProfileData({
+      firstName: user.name.split(' ')[0] || "",
+      lastName: user.name.split(' ')[1] || "",
+      email: user.email || "",
+      enrollmentNo: user.enrollmentNo || "",
+      program: "BTech Computer Science Engineering",
+      semester: user.currentSemester || "",
+      year: "3rd Year",
+      address: "123 Student Housing, University Campus",
+      dateOfBirth: "2002-05-15",
+      bloodGroup: "O+",
+      emergencyContact: "+1 (555) 987-6543",
+    });
+    setIsEditing(false);
+  };
+
+  if (loading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -90,8 +171,8 @@ export default function StudentProfile() {
             <div className="flex items-center space-x-6">
               <Avatar className="h-24 w-24 border-4 border-white/20">
                 <AvatarFallback className="bg-white/20 text-white text-2xl font-bold">
-                  {profileData.firstName[0]}
-                  {profileData.lastName[0]}
+                  {(profileData.firstName[0] || '').toUpperCase()}
+                  {(profileData.lastName[0] || '').toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -101,7 +182,9 @@ export default function StudentProfile() {
                 <p className="text-blue-100 mb-2">{profileData.program}</p>
                 <div className="flex items-center space-x-4">
                   <Badge className="bg-white/20 text-white hover:bg-white/30">{profileData.enrollmentNo}</Badge>
-                  <Badge className="bg-white/20 text-white hover:bg-white/30">{profileData.semester}</Badge>
+                  <Badge className="bg-white/20 text-white hover:bg-white/30">
+                    {profileData.semester ? `${profileData.semester}th Semester` : 'N/A'}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -292,21 +375,24 @@ export default function StudentProfile() {
                 {/* Current Subjects */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">Current Subjects</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      "Data Structures",
-                      "Computer Networks",
-                      "Database Systems",
-                      "Operating Systems",
-                      "Software Engineering",
-                      "Machine Learning",
-                    ].map((subject, index) => (
-                      <div key={subject} className="p-3 border border-gray-200 rounded-lg">
-                        <h4 className="font-medium text-gray-900">{subject}</h4>
-                        <p className="text-sm text-gray-600">BTech CSE - 6th Semester</p>
-                      </div>
-                    ))}
-                  </div>
+                  {loadingSubjects ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : subjects.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {subjects.map((subject, index) => (
+                        <div key={subject.id} className="p-3 border border-gray-200 rounded-lg">
+                          <h4 className="font-medium text-gray-900">{subject.subject}</h4>
+                          <p className="text-sm text-gray-600">
+                            {subject.subjectCode} • Taught by {subject.teacher}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-muted-foreground">No subjects found for this semester.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

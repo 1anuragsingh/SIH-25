@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { TrendingUp, Clock, QrCode, CheckCircle, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/AuthProvider.jsx"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import Link from "next/link" // Import the Link component
 import toast, { Toaster } from "react-hot-toast"
 
 // Mock data (for stats, as requested to keep)
@@ -61,6 +61,7 @@ export default function StudentDashboard() {
   const { user, loading, handleApiError } = useAuth();
   const router = useRouter();
 
+  // New state to store fetched classes and loading status
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
 
