@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, Plus, Trash2, BookOpen } from "lucide-react"
+import { Calendar, Clock, Plus, Trash2, BookOpen, Loader2 } from "lucide-react"
 import toast, { Toaster } from "react-hot-toast"
 import { useAuth } from "@/components/AuthProvider.jsx"
 
@@ -59,7 +59,7 @@ export default function TimetableManager() {
   const fetchTimetable = async () => {
     try {
       const token = localStorage.getItem('token');
-      // FIX: Changed the endpoint to the correct one for fetching a teacher's timetable
+      // FIX: Corrected the API endpoint to retrieve teacher's timetable
       const response = await fetch(`/api/timetable/teacher`, {
         headers: {
           'Content-Type': 'application/json',
@@ -228,95 +228,97 @@ export default function TimetableManager() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isAdding && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border border-gray-200 rounded-lg p-4 space-y-4"
-            >
-              <h3 className="font-semibold text-gray-900">Add New Class</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subjectName" className="text-gray-700 text-sm">Subject Name *</Label>
-                  <Input
-                    id="subjectName"
-                    value={newEntry.subjectName}
-                    onChange={(e) => setNewEntry({ ...newEntry, subjectName: e.target.value })}
-                    placeholder="e.g., Data Structures"
-                    className="border-gray-300 focus:border-[#00ABE4] text-sm"
-                  />
+          <AnimatePresence>
+            {isAdding && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border border-gray-200 rounded-lg p-4 space-y-4"
+              >
+                <h3 className="font-semibold text-gray-900">Add New Class</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subjectName" className="text-gray-700 text-sm">Subject Name *</Label>
+                    <Input
+                      id="subjectName"
+                      value={newEntry.subjectName}
+                      onChange={(e) => setNewEntry({ ...newEntry, subjectName: e.target.value })}
+                      placeholder="e.g., Data Structures"
+                      className="border-gray-300 focus:border-[#00ABE4] text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subjectCode" className="text-gray-700 text-sm">Subject Code *</Label>
+                    <Input
+                      id="subjectCode"
+                      value={newEntry.subjectCode}
+                      onChange={(e) => setNewEntry({ ...newEntry, subjectCode: e.target.value })}
+                      placeholder="e.g., CS201"
+                      className="border-gray-300 focus:border-[#00ABE4] text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="semesterNumber" className="text-gray-700 text-sm">Semester Number *</Label>
+                    <Input
+                      id="semesterNumber"
+                      type="number"
+                      value={newEntry.semesterNumber}
+                      onChange={(e) => setNewEntry({ ...newEntry, semesterNumber: e.target.value })}
+                      placeholder="e.g., 5"
+                      className="border-gray-300 focus:border-[#00ABE4] text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="day" className="text-gray-700 text-sm">Day of Week *</Label>
+                    <Select
+                      value={newEntry.day}
+                      onValueChange={(value) => setNewEntry({ ...newEntry, day: value })}
+                    >
+                      <SelectTrigger className="border-gray-300 focus:border-[#00ABE4] text-sm">
+                        <SelectValue placeholder="Select day" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAYS.map((day) => (
+                          <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="startTime" className="text-gray-700 text-sm">Start Time *</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={newEntry.startTime}
+                      onChange={(e) => setNewEntry({ ...newEntry, startTime: e.target.value })}
+                      className="border-gray-300 focus:border-[#00ABE4] text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endTime" className="text-gray-700 text-sm">End Time *</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={newEntry.endTime}
+                      onChange={(e) => setNewEntry({ ...newEntry, endTime: e.target.value })}
+                      className="border-gray-300 focus:border-[#00ABE4] text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subjectCode" className="text-gray-700 text-sm">Subject Code *</Label>
-                  <Input
-                    id="subjectCode"
-                    value={newEntry.subjectCode}
-                    onChange={(e) => setNewEntry({ ...newEntry, subjectCode: e.target.value })}
-                    placeholder="e.g., CS201"
-                    className="border-gray-300 focus:border-[#00ABE4] text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="semesterNumber" className="text-gray-700 text-sm">Semester Number *</Label>
-                  <Input
-                    id="semesterNumber"
-                    type="number"
-                    value={newEntry.semesterNumber}
-                    onChange={(e) => setNewEntry({ ...newEntry, semesterNumber: e.target.value })}
-                    placeholder="e.g., 5"
-                    className="border-gray-300 focus:border-[#00ABE4] text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="day" className="text-gray-700 text-sm">Day of Week *</Label>
-                  <Select
-                    value={newEntry.day}
-                    onValueChange={(value) => setNewEntry({ ...newEntry, day: value })}
+                <div className="flex space-x-2">
+                  <Button onClick={handleAddEntry} className="bg-[#00ABE4] hover:bg-[#0ea5e9] text-white text-sm">Add to Timetable</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsAdding(false)}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
                   >
-                    <SelectTrigger className="border-gray-300 focus:border-[#00ABE4] text-sm">
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS.map((day) => (
-                        <SelectItem key={day.value} value={day.value}>{day.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    Cancel
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="startTime" className="text-gray-700 text-sm">Start Time *</Label>
-                  <Input
-                    id="startTime"
-                    type="time"
-                    value={newEntry.startTime}
-                    onChange={(e) => setNewEntry({ ...newEntry, startTime: e.target.value })}
-                    className="border-gray-300 focus:border-[#00ABE4] text-sm"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endTime" className="text-gray-700 text-sm">End Time *</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
-                    value={newEntry.endTime}
-                    onChange={(e) => setNewEntry({ ...newEntry, endTime: e.target.value })}
-                    className="border-gray-300 focus:border-[#00ABE4] text-sm"
-                  />
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <Button onClick={handleAddEntry} className="bg-[#00ABE4] hover:bg-[#0ea5e9] text-white text-sm">Add to Timetable</Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsAdding(false)}
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {timetable.length === 0 ? (
             <div className="text-center py-8 text-gray-500">

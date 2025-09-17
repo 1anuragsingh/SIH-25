@@ -1,3 +1,4 @@
+// app/teacher/dashboard/page.tsx
 "use client"
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react"
@@ -70,7 +71,6 @@ export default function TeacherDashboard() {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // FIX: Changed endpoint to /api/timetable/teacher
       const response = await fetch(`/api/timetable/teacher`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -132,7 +132,6 @@ export default function TeacherDashboard() {
   }, [activeQR, handleApiError]);
 
   useEffect(() => {
-    // FIX: Added a safeguard to ensure animationSequence exists and has length before starting intervals.
     if (activeQR && activeQR.animationSequence && activeQR.animationSequence.length > 0) {
         animationIntervalRef.current = setInterval(() => {
             setCurrentFrameIndex(prev => (prev + 1) % (activeQR.animationSequence.length || 1));
@@ -172,10 +171,10 @@ export default function TeacherDashboard() {
         subject: semester.subjectName,
         expiresAt: sessionData.expiresAt,
         animationSequence: sessionData.animationSequence,
-        totalStudents: semester?.students?.length || 0, // FIX: Safely access length
+        totalStudents: semester?.students?.length || 0,
       });
 
-      setAllStudents(semester.students || []); // FIX: Handle potentially missing students array
+      setAllStudents(semester.students || []);
       toast.success("Session started!", { id: toastId });
     } catch (error) {
       toast.error((error as Error).message, { id: toastId });
@@ -292,9 +291,14 @@ export default function TeacherDashboard() {
     
   const getClassStatus = (startTime: string, endTime: string) => {
     const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const startDate = new Date(`${todayStr}T${startTime}`);
-    const endDate = new Date(`${todayStr}T${endTime}`);
+    const todayYear = now.getFullYear();
+    const todayMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const todayDay = String(now.getDate()).padStart(2, '0');
+    
+    const todayDateStr = `${todayYear}-${todayMonth}-${todayDay}`;
+
+    const startDate = new Date(`${todayDateStr}T${startTime}:00`);
+    const endDate = new Date(`${todayDateStr}T${endTime}:00`);
 
     if (now >= startDate && now <= endDate) return 'live';
     if (now > endDate) return 'completed';
@@ -454,3 +458,9 @@ export default function TeacherDashboard() {
                 })
               )}
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

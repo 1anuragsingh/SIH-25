@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
-import { User, Edit, Save, X } from "lucide-react"
+import { User, Edit, Save, X, Loader2 } from "lucide-react"
 import { useAuth } from "@/components/AuthProvider.jsx"
 import TimetableManager from "@/components/time-table-manager"
 
@@ -19,19 +19,32 @@ const fadeInUp = {
 }
 
 export default function TeacherProfile() {
-  const { user } = useAuth()
+  const { user, loading, handleApiError } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   
-  // FIX: Use the consistent firstName and lastName from the AuthProvider
+  // FIX: Initialize with empty strings to prevent errors on initial render
   const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
+    firstName: "",
+    lastName: "",
+    email: "",
     phone: "+1 (555) 123-4567",
     address: "456 Faculty Housing, University Campus",
     dateOfBirth: "1985-08-20",
     bio: "Passionate educator with expertise in machine learning and data science. Committed to fostering innovation and critical thinking in students.",
   })
+
+  // FIX: Use a useEffect hook to update profileData when the user object becomes available
+  useEffect(() => {
+    if (user) {
+        const nameParts = user.name.split(' ');
+        setProfileData(prev => ({
+            ...prev,
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+            email: user.email || '',
+        }))
+    }
+  }, [user]);
 
   const handleSave = () => {
     // Here you would typically save to API
@@ -40,7 +53,27 @@ export default function TeacherProfile() {
 
   const handleCancel = () => {
     // Reset to original data
+    if (user) {
+      const nameParts = user.name.split(' ');
+      setProfileData({
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        email: user.email || '',
+        phone: "+1 (555) 123-4567",
+        address: "456 Faculty Housing, University Campus",
+        dateOfBirth: "1985-08-20",
+        bio: "Passionate educator with expertise in machine learning and data science. Committed to fostering innovation and critical thinking in students.",
+      })
+    }
     setIsEditing(false)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
