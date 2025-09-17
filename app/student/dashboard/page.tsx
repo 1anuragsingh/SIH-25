@@ -121,6 +121,14 @@ export default function StudentDashboard() {
       </div>
     );
   }
+  
+  // FIX: Filter classes to only show upcoming and live ones
+  const liveAndUpcomingClasses = upcomingClasses.filter(
+    (classItem: any) => {
+      const status = getClassStatus(classItem.startTime, classItem.endTime);
+      return status === "Live" || status === "Upcoming";
+    }
+  );
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
@@ -207,8 +215,8 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {upcomingClasses.length > 0 ? (
-                  upcomingClasses.map((classItem) => {
+                {liveAndUpcomingClasses.length > 0 ? (
+                  liveAndUpcomingClasses.map((classItem) => {
                     // FIX: Add a check to prevent rendering if required data is missing
                     if (!classItem.subject || !classItem.teacher || !classItem.startTime || !classItem.endTime) {
                       return null;
